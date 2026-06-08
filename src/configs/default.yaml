@@ -1,0 +1,35 @@
+dataset:
+  train_dir: ../../data/Train
+  test_dir: ../../data/Test_A
+  view_count: 5
+  image_size: 448
+
+feature_extractor:
+  backend: dinov2
+  device: auto
+  dinov2:
+    repo_or_dir: facebookresearch/dinov2
+    model_name: dinov2_vits14
+    trust_repo: true
+    force_reload: false
+
+memory_bank:
+  patches_per_image: 128
+  max_patches_per_category: 200000
+  global_max_patches: 200000
+  random_seed: 2026
+  cache_enabled: true
+
+inference:
+  nn_chunk_size: 4096
+  score_aggregation: max
+
+output:
+  work_dir: ../../outputs
+  zip_name: submission.zip
+  submission_csv_name: submission.csv
+  predicted_masks_dir_name: predicted_masks
+
+logging:
+  level: INFO
+
