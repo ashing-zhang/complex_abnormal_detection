@@ -26,7 +26,7 @@ class DINOv2Config:
     """DINOv2 加载配置。"""
 
     repo_or_dir: str = "facebookresearch/dinov2"
-    model_name: str = "dinov2_vits14"
+    model_name: str = "dinov2_vitg14"
     trust_repo: bool | str = True
     force_reload: bool = False
 
