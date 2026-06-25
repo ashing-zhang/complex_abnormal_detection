@@ -9,7 +9,7 @@ feature_extractor:
   device: auto
   dinov2:
     repo_or_dir: facebookresearch/dinov2
-    model_name: dinov2_vits14
+    model_name: dinov2_vitg14
     trust_repo: true
     force_reload: false
 
