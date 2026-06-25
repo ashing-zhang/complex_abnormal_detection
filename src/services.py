@@ -10,6 +10,7 @@
 from __future__ import annotations
 
 import logging
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -244,25 +245,51 @@ def _predict_and_write_masks(
     """对测试集推理并写出 mask。"""
 
     rows: list[tuple[str, float]] = []
-    for sample in test_samples:
+    total = len(test_samples)
+    for i, sample in enumerate(test_samples, start=1):
         try:
             bank = banks.get(sample.category, banks["_GLOBAL_"])
             score, view_masks = _predict_one(cfg, extractor, bank, sample)
             _write_view_masks(predicted_masks_dir, sample, view_masks)
             rows.append((sample.group_folder, float(score)))
-            logger.info(
-                "样本推理成功: %s | category=%s | score=%.6f | views=%d",
-                sample.group_folder,
-                sample.category,
-                float(score),
-                len(sample.view_paths),
+            _print_progress(
+                current=i,
+                total=total,
+                desc="推理",
+                postfix=f"category={sample.category} score={float(score):.6f}",
             )
         except Exception as exc:
             logger.exception("样本推理失败: %s (%s)", sample.group_folder, exc)
             zeros = [np.zeros((cfg.dataset.image_size, cfg.dataset.image_size), dtype=np.uint8) for _ in sample.view_paths]
             _write_view_masks(predicted_masks_dir, sample, zeros)
             rows.append((sample.group_folder, 0.0))
+            _print_progress(
+                current=i,
+                total=total,
+                desc="推理",
+                postfix=f"category={sample.category} failed",
+            )
+    if total > 0:
+        sys.stderr.write("\n")
+        sys.stderr.flush()
     return rows
+
+
+def _print_progress(*, current: int, total: int, desc: str, postfix: str = "") -> None:
+    """打印单行进度条到 stderr。"""
+
+    if total <= 0:
+        return
+
+    width = 28
+    ratio = min(max(current / total, 0.0), 1.0)
+    filled = int(round(ratio * width))
+    bar = "=" * filled + "." * (width - filled)
+    pct = int(round(ratio * 100))
+    tail = f" | {postfix}" if postfix else ""
+
+    sys.stderr.write(f"\r{desc} [{bar}] {current}/{total} ({pct:3d}%)" + tail)
+    sys.stderr.flush()
 
 
 def _predict_one(
