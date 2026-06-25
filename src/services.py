@@ -250,6 +250,13 @@ def _predict_and_write_masks(
             score, view_masks = _predict_one(cfg, extractor, bank, sample)
             _write_view_masks(predicted_masks_dir, sample, view_masks)
             rows.append((sample.group_folder, float(score)))
+            logger.info(
+                "样本推理成功: %s | category=%s | score=%.6f | views=%d",
+                sample.group_folder,
+                sample.category,
+                float(score),
+                len(sample.view_paths),
+            )
         except Exception as exc:
             logger.exception("样本推理失败: %s (%s)", sample.group_folder, exc)
             zeros = [np.zeros((cfg.dataset.image_size, cfg.dataset.image_size), dtype=np.uint8) for _ in sample.view_paths]
@@ -316,4 +323,3 @@ def _write_view_masks(predicted_masks_dir: Path, sample: MultiViewSample, view_m
     ensure_dir(out_dir)
     for i, mask in enumerate(view_masks):
         save_grayscale_png(out_dir / f"{i}_mask.png", array_2d_uint8=mask)
-
